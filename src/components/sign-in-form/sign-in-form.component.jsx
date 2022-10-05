@@ -9,10 +9,10 @@ import { useState } from "react";
 // import {getRedirectResult} from 'firebase/auth';
 // import { async } from "@firebase/util";
 // import SignUpForm from '../sign-up-form/sign-up-form.component';
-import Button from "../button/button.component";
+import Button, {BUTTON_TYPE_CLASSES} from "../button/button.component";
 import FormInput from "../form-input/form-input.component";
 import './sign-in-form.styles.scss'
-
+ 
 
 const defaultFormFields = {
     email:'',
@@ -93,7 +93,7 @@ const SignInForm = () => {
 
                 <div className="buttons-container">
                     <Button type="submit">Sign in</Button>
-                    <Button type='button' buttonType='google'  onClick={logGoogleUser}>Sing in with Google Popup</Button>
+                    <Button type='button' buttonType={BUTTON_TYPE_CLASSES.google}  onClick={logGoogleUser}>Sing in with Google Popup</Button>
                     {/* <button onClick={signInWithGoogleRedirect}>Sing in with Google Redirect</button> */}
                 </div>
             
