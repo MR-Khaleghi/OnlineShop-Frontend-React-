@@ -1,8 +1,12 @@
-import { useState, } from "react";
+import { ChangeEvent, FormEvent, useState, } from "react";
 import { createAuthUserWithEmailAndPassword,createUserDocumentFromAuth,  } from "../../utils/firebase/firebase.utils";
 import FormInput from '../form-input/form-input.component';
-import './sign-up-form.styles.scss';
+import './sign-up-form.styles.tsx';
 import Button from '../button/button.component';
+import { useDispatch } from "react-redux";
+import { signUpStart } from "../../store/user/user.action";
+import { AuthError, AuthErrorCodes } from "firebase/auth";
+import { SignUpContainer } from "./sign-up-form.styles";
 
 const defaultFormFields = {
     displayName:'',
@@ -15,42 +19,40 @@ const defaultFormFields = {
 const SignUpForm = () => {
     const [formFields, setFormFields] = useState(defaultFormFields);
     const {displayName, email, password, confirmPassword} = formFields;
-
+    const dispatch = useDispatch();
 
     // console.log(formFields);
     const resetFormFields = () =>{
         setFormFields(defaultFormFields);
     }
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if(password !== confirmPassword ) {
             alert("passwords do not match");
             return
         }
         try{
-            const {user} = await createAuthUserWithEmailAndPassword(email, password);
-
-            await createUserDocumentFromAuth(user, {displayName})
+            dispatch(signUpStart(email, password, displayName))
             // console.log(user);
 
             resetFormFields();
         }catch(error){
-            if(error.code === 'auth/network-request-failed'){
+            if((error as AuthError).code === AuthErrorCodes.NETWORK_REQUEST_FAILED){
                 alert('auth/network-request-failed');
             }
-            if(error.code === 'auth/email-already-in-use'){
+            if((error as AuthError).code === AuthErrorCodes.EMAIL_EXISTS){
                 alert('faild, email already exist')
             }
             console.error(error);}
     }
 
-    const handleChange = (event) => {
+    const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
         const {name, value} = event.target;
         setFormFields({...formFields, [name]: value});
     }
 
     return(
-        <div className="sign-up-container">
+        <SignUpContainer>
             <h2>Don't have an account?</h2>
             <span>Sign Up with your email and password</span>
             <form onSubmit={handleSubmit} >
@@ -91,7 +93,7 @@ const SignUpForm = () => {
                 />
                 <Button  type="submit">Sign Up</Button>
             </form>
-        </div>
+        </SignUpContainer>
     );
 };
 

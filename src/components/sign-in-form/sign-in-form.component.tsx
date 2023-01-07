@@ -1,17 +1,22 @@
-import { 
-    auth,
-    signInWithGooglePopup,
-     createUserDocumentFromAuth,
-    //  signInWithGoogleRedirect,
-    signInWithEmailAndPass } from "../../utils/firebase/firebase.utils";
+// import { 
+//     auth,
+//     signInWithGooglePopup,
+//      createUserDocumentFromAuth,
+//     //  signInWithGoogleRedirect,
+//     signInWithEmailAndPass } from "../../utils/firebase/firebase.utils";
 
-import { useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 // import {getRedirectResult} from 'firebase/auth';
 // import { async } from "@firebase/util";
 // import SignUpForm from '../sign-up-form/sign-up-form.component';
 import Button, {BUTTON_TYPE_CLASSES} from "../button/button.component";
 import FormInput from "../form-input/form-input.component";
-import './sign-in-form.styles.scss'
+// import './sign-in-form.styles.tsx'
+import { useDispatch } from "react-redux";
+import { emailSignInStart, googleSignInStart } from "../../store/user/user.action";
+import { ButtonsContainer, SignInContainer } from "./sign-in-form.styles";
+import { AuthError, AuthErrorCodes } from "firebase/auth";
+// import { onEmailSignInStart } from "../../store/user/user.saga";
  
 
 const defaultFormFields = {
@@ -21,6 +26,7 @@ const defaultFormFields = {
 
 const SignInForm = () => {
 
+    const dispatch = useDispatch();
     const [formFields, setFormFields] = useState(defaultFormFields);
     const {email, password} = formFields;
     
@@ -36,12 +42,16 @@ const SignInForm = () => {
         
     //     , []);
 
+const resetFormFields = () => {
+    setFormFields(defaultFormFields);
+}
+
     const logGoogleUser = async () => {
-        signInWithGooglePopup();
+        dispatch(googleSignInStart());
         
     };
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         // console.log(event);
         if(!password){
@@ -49,27 +59,27 @@ const SignInForm = () => {
             return;
         }
         try{
-            const {user} = await signInWithEmailAndPass(email,password);
+            dispatch(emailSignInStart(email,password));
             // const userDocRef = await createUserDocumentFromAuth(user);
-            
-            console.log(user);
+            resetFormFields();
+            // console.log(user);
             
         }catch(error){
-            if(error.code === 'auth/user-not-found'){
+            if((error as AuthError).code === AuthErrorCodes.NULL_USER){
                 alert('user-not-found');
-            }else if(error.code === 'auth/wrong-password'){
+            }else if((error as AuthError).code === AuthErrorCodes.INVALID_PASSWORD){
                  alert('wrong-password')
             }
-            console.error(error);}
+            console.error(error as Error);}
         
 }
-    const handleChange = (event) => {
+    const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
         const {name, value} = event.target;
         setFormFields({...formFields, [name]: value});
     }
 
     return (
-        <div className='sign-in-container'>
+        <SignInContainer>
             <h2>I already have an account</h2>
             <span>Sign in with your email and password</span>
             <form onSubmit={handleSubmit}>
@@ -91,15 +101,15 @@ const SignInForm = () => {
                     value={password}
                 />
 
-                <div className="buttons-container">
+                <ButtonsContainer>
                     <Button type="submit">Sign in</Button>
                     <Button type='button' buttonType={BUTTON_TYPE_CLASSES.google}  onClick={logGoogleUser}>Sing in with Google Popup</Button>
                     {/* <button onClick={signInWithGoogleRedirect}>Sing in with Google Redirect</button> */}
-                </div>
+                </ButtonsContainer>
             
            
              </form>
-        </div>
+        </SignInContainer>
     );
 };
 export default SignInForm;
